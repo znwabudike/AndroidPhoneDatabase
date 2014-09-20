@@ -3,7 +3,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Set;
+
+import com.github.znwabudike.androidphonedatabase.db.DBSettings;
+import com.github.znwabudike.androidphonedatabase.db.DbHandler;
+import com.github.znwabudike.androidphonedatabase.db.DbHelper;
+import com.github.znwabudike.androidphonedatabase.struct.AndroidDevice;
 
 
 public class HtmlParser {
@@ -37,10 +41,15 @@ public class HtmlParser {
 	private boolean startParse = false;
 	private boolean isFinished = false;
 	private BufferedReader reader;
+	DbHandler dbHandler = new DbHandler();
+	private ArrayList<AndroidDevice> devices = new ArrayList<AndroidDevice>();
 
 	public HashMap<Character,HashMap<String,HashMap<String, String>>> parseResponse(BufferedReader reader) throws IOException {
 		this.reader = reader;
 		int pos = 0;
+
+		DbHelper dbHelper = new DbHelper();
+		dbHelper.createNewDatabase(DBSettings.TABLE_NAME);
 
 		while ((line = reader.readLine()) != null){
 			if (line.contains("<a name=\"num\"></a><br>")){
@@ -62,6 +71,10 @@ public class HtmlParser {
 				}
 			}
 		}
+		if (!dbHandler.insertDevices(devices)){
+			log("Something Wrong With Insert!");
+			return null;
+		}
 		return deviceMap;
 	}
 
@@ -80,9 +93,28 @@ public class HtmlParser {
 				split = s.split(sli)[0];
 
 				if (split.contains("(")){
-					String modelKey = "(" + split.split("\\(")[1];
+
+					// may get rid of this
+					String modelKey = split.split("\\(")[1];
+					String modelNum = modelKey.replace("(", "");
+					//					modelNum = modelNum.split("/")[0];
+
+					//put it into the DB
+					modelNum = modelKey.replace(")", "");
+					modelNum = modelNum.split("/")[0];
+					String modelNum2 = modelNum.split("/")[0];
+					//TODO do something with model number 2.. make another column?
+
 					String modelValue = split.split("\\(")[0];
-					modelMap.put(modelKey, modelValue);
+					AndroidDevice device = new AndroidDevice(brand, modelNum, modelValue, null);
+					devices.add(device);
+
+
+					//					if (!dbHandler.insertDevice(device)){
+					//						log("Something Wrong With Insert!");
+					//						return;
+					//					}
+
 					//									log("Model = " + split);
 				}else{
 

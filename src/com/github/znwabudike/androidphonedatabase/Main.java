@@ -6,9 +6,11 @@ import java.util.HashMap;
 import org.apache.http.HttpResponse;
 
 import com.github.znwabudike.androidphonedatabase.http.HttpHelper;
+import com.github.znwabudike.androidphonedatabase.utils.SizeUtil;
 
 
 public class Main extends Applet{
+	String commonName = "SPH710";
 
 	/**
 	 * 
@@ -16,7 +18,9 @@ public class Main extends Applet{
 	private static final long serialVersionUID = 1L;
 
 	public void init(){
+		long time = System.currentTimeMillis();
 		downloadPhonesFile();
+		log("time taken = " + (System.currentTimeMillis() - time));
 	}
 
 	private void downloadPhonesFile() {
@@ -24,7 +28,8 @@ public class Main extends Applet{
 		HttpResponse response = httpH.getPhonesPage();
 		try {
 			HashMap<Character,HashMap<String,HashMap<String, String>>> deviceMap = httpH.parseResponse(response);
-			
+			int size = SizeUtil.getSize(deviceMap);
+			log("Size = " + size);
 		} catch (IllegalStateException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
