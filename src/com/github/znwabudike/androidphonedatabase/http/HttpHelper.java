@@ -2,6 +2,7 @@ package com.github.znwabudike.androidphonedatabase.http;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.apache.http.HttpResponse;
@@ -12,11 +13,13 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 import com.github.znwabudike.androidphonedatabase.parser.HtmlParser;
+import com.github.znwabudike.androidphonedatabase.settings.Settings;
+import com.github.znwabudike.androidphonedatabase.struct.AndroidDevice;
 
 
 public class HttpHelper {
 	HttpClient client;
-	private static final String uri = "https://support.google.com/googleplay/answer/1727131";
+	private static final String uri = Settings.URI;
 	public HttpHelper(){
 
 	}
@@ -40,18 +43,22 @@ public class HttpHelper {
 		return response;
 	}
 	
-	public HashMap<Character, HashMap<String, HashMap<String, String>>> parseResponse(HttpResponse response) throws IllegalStateException, IOException{
-		HashMap<Character,HashMap<String,HashMap<String, String>>> deviceMap = null;
+	public ArrayList<AndroidDevice> parseResponse(HttpResponse response) throws IllegalStateException, IOException{
+		ArrayList<AndroidDevice> deviceMap = null;
 		InputStreamReader isr = new InputStreamReader(response.getEntity().getContent());
 		BufferedReader reader = new BufferedReader(isr);
 		HtmlParser p = new HtmlParser();
 		deviceMap = p.parseResponse(reader);
+		reader.close();
+		isr.close();
 		log("list parsed - Finish");
 		return deviceMap;
 	}
 	
 	private void log(String string) {
-		String TAG = this.getClass().getSimpleName();
-		System.out.println(TAG + " : " + string);
+		if (Settings.DEBUG){
+			String TAG = this.getClass().getSimpleName();
+			System.out.println(TAG + " : " + string);
+		}
 	}
 }

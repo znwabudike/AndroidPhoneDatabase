@@ -12,6 +12,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 
+import com.github.znwabudike.androidphonedatabase.settings.DBSettings;
+import com.github.znwabudike.androidphonedatabase.settings.Settings;
 import com.github.znwabudike.androidphonedatabase.struct.AndroidDevice;
 
 public class DbHelper {
@@ -25,12 +27,9 @@ public class DbHelper {
 	public Statement createConnection() throws IOException{
 //		String dbpath = DBSettings.PATH_TO_DB;
 //		String fullpath = DBSettings.PATH_TO_DB + DBSettings.DB_NAME;
-		
-		String path = DbHelper.class.getProtectionDomain().getCodeSource().getLocation().getPath().toString() + "res\\raw\\db\\" + DBSettings.DB_NAME;
 
-		String uri = (new File( "res\\raw\\db" + DBSettings.DB_NAME ).getAbsolutePath());
+		String uri = (new File( DBSettings.DB_NAME ).getAbsolutePath());
 		
-//		uri =  "res\\raw\\db\\" + DBSettings.DB_NAME;
 		log(uri);
 //		uri = (DbHelper.class.getProtectionDomain().getCodeSource().getLocation().toString() + "res/raw/db/" + DBSettings.DB_NAME).split("file:/")[1];
 	
@@ -58,7 +57,7 @@ public class DbHelper {
 
 	public ResultSetMetaData queryCommonName(String modelNum) 
 			throws IOException, SQLException{
-		String qry = StatementBuilder.buildCommonNameQuery(modelNum);
+		String qry = DbStatementBuilder.buildCommonNameQuery(modelNum);
 
 		Statement statement = createConnection();
 		ResultSet rs = statement.executeQuery(qry);
@@ -137,11 +136,10 @@ public class DbHelper {
 
 
 	public boolean createNewDatabase(String tablename) {
-		String sql = StatementBuilder.buildCreateTableCommand(DBSettings.COLUMN_NAMES, tablename);
-		Statement statement;
+//		String sql = DbStatementBuilder.buildCreateTableCommand(DBSettings.COLUMN_NAMES, tablename);
+		
 		try {
-			statement = createConnection();
-			return DbCreator.createAndroidDeviceTable(statement, DBSettings.COLUMN_NAMES, tablename);
+			return DbCreator.createAndroidDeviceTable(createConnection(), DBSettings.COLUMN_NAMES, tablename);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -169,8 +167,10 @@ public class DbHelper {
 	}
 	
 	private void log(String string) {
-		String TAG = this.getClass().getSimpleName();
-		System.out.println(TAG + " : " + string);
+		if (Settings.DEBUG){
+			String TAG = this.getClass().getSimpleName();
+			System.out.println(TAG + " : " + string);
+		}
 	}
 
 }

@@ -6,7 +6,7 @@ import java.sql.Statement;
 public class DbCreator {
 	
 	public static boolean createAndroidDeviceTable(Statement statement, String[] colnames, String tablename){
-		String stmt = StatementBuilder.buildCreateTableCommand(colnames, tablename);
+		String stmt = DbStatementBuilder.buildCreateTableCommand(colnames, tablename);
 		try {
 			return statement.execute(stmt);
 		} catch (SQLException e) {

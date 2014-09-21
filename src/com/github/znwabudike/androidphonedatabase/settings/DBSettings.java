@@ -1,4 +1,4 @@
-package com.github.znwabudike.androidphonedatabase.db;
+package com.github.znwabudike.androidphonedatabase.settings;
 
 public class DBSettings {
 

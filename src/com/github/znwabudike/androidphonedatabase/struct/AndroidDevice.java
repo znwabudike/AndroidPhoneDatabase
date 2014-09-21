@@ -37,6 +37,14 @@ public class AndroidDevice {
 	}
 	public int getNumProperties() {	return numProps;
 	}
+	public void printDevice(){
+		System.out.println("=========================");
+		System.out.println("Brand: " + manufacturer);
+		System.out.println("Model: " + modelNum);
+		System.out.println("Common: " + commonName);
+		System.out.println("Carrier: " + carrier);
+		System.out.println("=========================");
+	}
 	
 	
 	

@@ -4,182 +4,114 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import com.github.znwabudike.androidphonedatabase.db.DBSettings;
 import com.github.znwabudike.androidphonedatabase.db.DbHandler;
 import com.github.znwabudike.androidphonedatabase.db.DbHelper;
+import com.github.znwabudike.androidphonedatabase.settings.DBSettings;
+import com.github.znwabudike.androidphonedatabase.settings.Settings;
 import com.github.znwabudike.androidphonedatabase.struct.AndroidDevice;
+import com.github.znwabudike.androidphonedatabase.utils.Cleaner;
 
 
 public class HtmlParser {
-	String line = "";
-	String strong = "<br><strong>";
-	String sstrong = "</strong>";
-	String ul = "<ul>";
-	String lt = "<";
-	String gt = ">";
-	String split;
-	String brand = null;
-	String model;
-	String br = "<br>";
-	String sul = "</ul>";
-	String li = "<li>";
-	String sli = "</li>";
-	String[] nums = {"0","1","2","3","4","5","6","7","8","9","0"};
-	ArrayList<String> brands = new ArrayList<String>();
-	ArrayList<Character> alpha = new ArrayList<Character>();
-	Character first = null;
-	boolean isNewChar = false;
-	HashMap<Character,HashMap<String,HashMap<String, String>>> deviceMap =
-			new HashMap<Character,HashMap<String,HashMap<String, String>>>();
 
-	HashMap<String,HashMap<String, String>> brandMap = 
-			new HashMap<String,HashMap<String, String>>();
-
-	HashMap<String, String> modelMap = 
-			new HashMap<String, String>();
-
-	private boolean startParse = false;
-	private boolean isFinished = false;
-	private BufferedReader reader;
 	DbHandler dbHandler = new DbHandler();
-	private ArrayList<AndroidDevice> devices = new ArrayList<AndroidDevice>();
 
-	public HashMap<Character,HashMap<String,HashMap<String, String>>> parseResponse(BufferedReader reader) throws IOException {
-		this.reader = reader;
-		int pos = 0;
+	public ArrayList<AndroidDevice> parseResponse(BufferedReader reader) throws IOException {
 
 		DbHelper dbHelper = new DbHelper();
 		dbHelper.createNewDatabase(DBSettings.TABLE_NAME);
 
-		while ((line = reader.readLine()) != null){
-			if (line.contains("<a name=\"num\"></a><br>")){
-				//				log("Line read: " + line);
-				startParse  = true;
-			}if (startParse){
+		String body = parseToString(reader);
+		//		log("Body = " + body);
+		ArrayList<AndroidDevice> devices = parseForDevices(body);
 
-				if(! parseForBrand() ){
-					break;
-				}else{
-					parseForModels();
-				}
-
-				if (isNewChar){
-					//					log("Putting brandMap into :" + Character.toString(first));
-					deviceMap.put(first, brandMap);
-				}else{
-					//					log("not new char");
-				}
-			}
-		}
-		if (!dbHandler.insertDevices(devices)){
+		log("number of devices parsed: " + devices.size());
+		log("number of devices parsed: " + devices.size());
+		log("number of devices parsed: " + devices.size());
+		log("number of devices parsed: " + devices.size());
+		log("number of devices parsed: " + devices.size());
+		if (!dbHandler.insertDevices(devices, 0)){
 			log("Something Wrong With Insert!");
 			return null;
-		}
-		return deviceMap;
-	}
-
-	private void parseForModels() throws IOException {
-		//		log("Parsing for models");
-		if(line.contains(ul)){
-			line = reader.readLine();
-		}
-		String leftover;
-		modelMap = new HashMap<String, String>();
-		//					log("New Model Map");
-		//		log("Line read: " + line); 
-		if (line.contains(li)){
-			String[] splits = line.split(li);
-			for (String s : splits){
-				split = s.split(sli)[0];
-
-				if (split.contains("(")){
-
-					// may get rid of this
-					String modelKey = split.split("\\(")[1];
-					String modelNum = modelKey.replace("(", "");
-					//					modelNum = modelNum.split("/")[0];
-
-					//put it into the DB
-					modelNum = modelKey.replace(")", "");
-					modelNum = modelNum.split("/")[0];
-					String modelNum2 = modelNum.split("/")[0];
-					//TODO do something with model number 2.. make another column?
-
-					String modelValue = split.split("\\(")[0];
-					AndroidDevice device = new AndroidDevice(brand, modelNum, modelValue, null);
-					devices.add(device);
-
-
-					//					if (!dbHandler.insertDevice(device)){
-					//						log("Something Wrong With Insert!");
-					//						return;
-					//					}
-
-					//									log("Model = " + split);
-				}else{
-
-					//				log("No modelValue: "+ split);
-					//									modelMap.put(split,null);
-				}
-			}
-			if (split.contains(sul)){
-				leftover = split.split(sul)[1];
-				log("Leftover = " + leftover);
-			}
-		}
-
-		if(!brandMap.containsKey(brand)){
-			log("Putting " + brand + " into brandMap");
-			brandMap.put(brand, modelMap);
+		} else {
+			log("insert successful!");
+			return devices;
 		}
 
 	}
 
-	private boolean parseForBrand() throws IOException {
-		//		log("Parsing for brand");
-		//				log("Line read: " + line); npo :)
-		if (line.contains(ul)){
-			line = reader.readLine();
-		}
-		String temp;
-		if(line.contains(strong)){//<strong>3Q</strong>
-			String[] splits = line.split(strong);
-			//			log("Splits size = "+ splits.length);
 
-			line = splits[1];//3Q</strong>
 
-			split = line.split(sstrong)[0];//3Q
-
-			//			log("BRAND NAME: " + split);
-			if (split.contains("</script>")){
-				log("/script found!!");
-				return false;
+	private String parseToString(BufferedReader reader) throws IOException {
+		String string = "";
+		String line;
+		boolean isParsing = false;
+		while ( (line = reader.readLine()) != null){
+			if (line.contains(Settings.STRING_BEGIN)){
+				log("Starting parser: " + line);
+				isParsing = true;
+			}else if (line.contains(Settings.STRING_TERMINATE)){
+				log(Settings.STRING_TERMINATE + " Body clipped.");
+				return string;
 			}
-			//				split = split.split(lt)[0];
-			brand = split;
-			first = brand.charAt(0);
-
-			if (! alpha.contains(first)){
-				//				log("NEW CHAR = " + first);
-				alpha.add(first);
-				isNewChar = true;
+			if(isParsing){
+				string += line + "\n";
 			}
-			else{ isNewChar = false;}
 
-			brands.add(brand);
-			//			log("Brand = " + brand.toUpperCase());
-			brandMap = new HashMap<String,HashMap<String, String>>();
-
-			//			log("Line read: " + line);
-
-		}else {
 		}
-		return true;
+		return string;
+	}
 
+	private ArrayList<AndroidDevice> parseForDevices(String body) {
+
+		ArrayList<AndroidDevice> devices = new ArrayList<AndroidDevice>();
+		String[] brands_line = body.split("<strong>");
+		int i = 1;
+		int count = 0;
+		log("number of brands = " + brands_line.length);
+		for (;i < brands_line.length ; i ++){
+			String temp = brands_line[i];
+//			log(i + " " +  temp);
+			String brand = temp.split("</strong>")[0];
+//			log("brand = " + brand);
+			String productsblob = temp.split("</ul>")[0].split("<ul>")[1];
+//			log("productsblob = " + productsblob);
+			String[] products = productsblob.split("</li>");
+
+			for (String product : products){
+				product = product.replace("<li>","");
+//				log(product);
+				String common_name = product.substring(0,product.indexOf("("));
+				String model = product.substring(product.indexOf("("),product.length());
+
+				AndroidDevice device = new AndroidDevice(
+						Cleaner.cleanString(brand), 
+						Cleaner.cleanString(model), 
+						Cleaner.cleanString(common_name),
+						null);
+//
+//				log(count++ +"");
+//				if (true) device.printDevice();
+				devices.add(device);
+
+				// If you're curious about how slow this can be with single adds...
+				//				if (!dbHandler.insertDevice(device)){
+				//					log("Something Wrong With Insert!");
+				//					return null;
+				//			
+				//				}
+				//////////////////////////////////////////////////////////////
+			}
+			
+		}
+		return devices;
 	}
 
 	private void log(String string) {
-		String TAG = this.getClass().getSimpleName();
-		System.out.println(TAG + " : " + string);
+		if (true){
+			//			if (Settings.DEBUG){
+			String TAG = this.getClass().getSimpleName();
+			System.out.println(TAG + " : " + string);
+		}
 	}
 }
