@@ -117,6 +117,7 @@ public class DbHelper {
 	private boolean checkFileExists(String uri){
 		log("Checking if file exists at: " + uri.toString());
 		File f = new File(uri);
+		f.delete();
 		boolean created = false;
 		if (!f.exists()){
 			try {

@@ -22,17 +22,13 @@ public class HtmlParser {
 		dbHelper.createNewDatabase(DBSettings.TABLE_NAME);
 
 		String body = parseToString(reader);
-		//		log("Body = " + body);
 		ArrayList<AndroidDevice> devices = parseForDevices(body);
 
 		log("number of devices parsed: " + devices.size());
-		log("number of devices parsed: " + devices.size());
-		log("number of devices parsed: " + devices.size());
-		log("number of devices parsed: " + devices.size());
-		log("number of devices parsed: " + devices.size());
+
 		if (!dbHandler.insertDevices(devices, 0)){
 			log("Something Wrong With Insert!");
-			return null;
+			return devices;
 		} else {
 			log("insert successful!");
 			return devices;
@@ -51,6 +47,7 @@ public class HtmlParser {
 				log("Starting parser: " + line);
 				isParsing = true;
 			}else if (line.contains(Settings.STRING_TERMINATE)){
+				string += line;
 				log(Settings.STRING_TERMINATE + " Body clipped.");
 				return string;
 			}
@@ -71,47 +68,56 @@ public class HtmlParser {
 		log("number of brands = " + brands_line.length);
 		for (;i < brands_line.length ; i ++){
 			String temp = brands_line[i];
-//			log(i + " " +  temp);
+			//			log(i + " " +  temp);
 			String brand = temp.split("</strong>")[0];
-//			log("brand = " + brand);
-			String productsblob = temp.split("</ul>")[0].split("<ul>")[1];
-//			log("productsblob = " + productsblob);
+			String productsblob;
+			log("brand = " + brand);
+			log("temp = " + temp);
+			productsblob = temp.split("</ul>")[0].split("<ul>")[1];
+			log("productsblob = " + productsblob);
 			String[] products = productsblob.split("</li>");
 
 			for (String product : products){
 				product = product.replace("<li>","");
-//				log(product);
-				String common_name = product.substring(0,product.indexOf("("));
-				String model = product.substring(product.indexOf("("),product.length());
+				product = product.replace("\n","");
+				if (product.compareTo("") != 0){
 
-				AndroidDevice device = new AndroidDevice(
-						Cleaner.cleanString(brand), 
-						Cleaner.cleanString(model), 
-						Cleaner.cleanString(common_name),
-						null);
-//
-//				log(count++ +"");
-//				if (true) device.printDevice();
-				devices.add(device);
+					String common_name = product.substring(0,product.indexOf("("));
+					String model = product.substring(product.indexOf("("),product.length());
 
-				// If you're curious about how slow this can be with single adds...
-				//				if (!dbHandler.insertDevice(device)){
-				//					log("Something Wrong With Insert!");
-				//					return null;
-				//			
-				//				}
-				//////////////////////////////////////////////////////////////
+					AndroidDevice device = new AndroidDevice(
+							Cleaner.cleanString(brand), 
+							Cleaner.cleanString(model), 
+							Cleaner.cleanString(common_name),
+							null);
+
+
+					//									if (Settings.DEBUG) device.printDevice();
+					devices.add(device);
+
+					//// If you're curious about how slow this can be with single adds
+					//// then comment out the above line and uncomment the lines below
+					////				if (!dbHandler.insertDevice(device)){
+					////					log("Something Wrong With Insert!");
+					////					return null;
+					////			
+					////				}
+					//////////////////////////////////////////////////////////////
+				}
 			}
-			
+
 		}
+		log("Size of devices returned= " + devices.size());
 		return devices;
 	}
 
 	private void log(String string) {
-		if (true){
-			//			if (Settings.DEBUG){
+
+		if (Settings.DEBUG){
 			String TAG = this.getClass().getSimpleName();
 			System.out.println(TAG + " : " + string);
 		}
 	}
 }
+
+

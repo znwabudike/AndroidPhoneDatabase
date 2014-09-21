@@ -90,7 +90,7 @@ public class DbStatementBuilder {
 	}
 
 	private static void log(String string) {
-		if (true){
+		if (Settings.DEBUG){
 			String TAG = DbStatementBuilder.class.getSimpleName();
 			System.out.println(TAG + " : " + string);
 		}

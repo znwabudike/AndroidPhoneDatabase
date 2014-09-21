@@ -37,12 +37,12 @@ public class DbHandler {
 	public boolean insertDevices(ArrayList<AndroidDevice> devices, int index){
 		boolean result = false;
 		log("size = " + devices.size());
-		if (devices.size() >= 500){
+		if (index != devices.size()){
 			log("inception on: " + index);
-			int started = index;
+			int start = index;
 			ArrayList<AndroidDevice> recursiveDevices = new ArrayList<AndroidDevice>();
 
-			for (; index < started + 499 && index < devices.size(); index++){
+			for (; index < start + 499 && index < devices.size(); index++){
 
 				recursiveDevices.add(devices.get(index));
 				log("name = " + devices.get(index).getModelNum());
@@ -51,7 +51,7 @@ public class DbHandler {
 			insertBlock(recursiveDevices);
 			result = insertDevices(devices,index);
 		}else{
-			result = insertBlock(devices);
+			return false;
 		}
 		return result;
 	}
@@ -83,7 +83,7 @@ public class DbHandler {
 	}
 
 	private void log(String string) {
-		if (true){
+		if (Settings.DEBUG){
 			String TAG = this.getClass().getSimpleName();
 			System.out.println(TAG + " : " + string);
 		}

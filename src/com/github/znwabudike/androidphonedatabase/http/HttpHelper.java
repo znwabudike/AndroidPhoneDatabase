@@ -49,6 +49,7 @@ public class HttpHelper {
 		BufferedReader reader = new BufferedReader(isr);
 		HtmlParser p = new HtmlParser();
 		deviceMap = p.parseResponse(reader);
+		log("size =" + deviceMap.size());
 		reader.close();
 		isr.close();
 		log("list parsed - Finish");
@@ -57,6 +58,7 @@ public class HttpHelper {
 	
 	private void log(String string) {
 		if (Settings.DEBUG){
+//		if (true){
 			String TAG = this.getClass().getSimpleName();
 			System.out.println(TAG + " : " + string);
 		}

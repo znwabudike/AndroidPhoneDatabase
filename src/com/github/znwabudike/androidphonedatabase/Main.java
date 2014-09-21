@@ -29,19 +29,15 @@ public class Main extends Applet{
 		HttpHelper httpH = new HttpHelper();
 		HttpResponse response = httpH.getPhonesPage();
 		long time = System.currentTimeMillis();
+		ArrayList<AndroidDevice> deviceMap = null;
 		try {
-			ArrayList<AndroidDevice> deviceMap = httpH.parseResponse(response);
-			int size = SizeUtil.getSize(deviceMap);
-//			log("Size = " + size);
-		} catch (IllegalStateException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}finally{
+			deviceMap = httpH.parseResponse(response);
+		} catch (IllegalStateException e) {e.printStackTrace();
+		} catch (IOException e) {e.printStackTrace();}
+		finally{
 			log("Finished");
 			log("time taken = " + (System.currentTimeMillis() - time));
+			log("number of devices = " + deviceMap.size());
 			System.exit(0);
 		}
 
