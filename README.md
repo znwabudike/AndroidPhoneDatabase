@@ -3,6 +3,12 @@ AndroidPhoneDatabase
 
 Written by Zachary Nwabudike
 ------------------------------
+UPDATE 10/20/14 
+
+The code is broken right now.  It looks like Google changed their list from HTML to a .pdf file.
+Working to get it resolved within the next few days. 
+
+-ZN
 
 This Java utility gets the current list of all devices the support Android and inserts them into an SQLite3 database. 
 
