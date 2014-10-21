@@ -15,11 +15,6 @@
 	<classpathentry exported="true" kind="lib" path="libs/httpclient-4.3.5.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/httpcore-4.3.2.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/sqlite-jdbc-3.7.2.jar"/>
-	<classpathentry kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
-		<attributes>
-			<attribute name="maven.pomderived" value="true"/>
-		</attributes>
-	</classpathentry>
 	<classpathentry kind="lib" path="libs/tika-app-1.6.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

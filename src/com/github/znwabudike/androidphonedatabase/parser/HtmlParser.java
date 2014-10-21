@@ -66,12 +66,12 @@ public class HtmlParser {
 	                if (entity != null) {
 	                    try{
 	                        input = entity.getContent();
-	                        BodyContentHandler handler = new BodyContentHandler();
+	                        BodyContentHandler handler = new BodyContentHandler(10*1024*1024); 
 	                        Metadata metadata = new Metadata();
 	                        AutoDetectParser parser = new AutoDetectParser();
 	                        ParseContext parseContext = new ParseContext();
 	                        parser.parse(input, handler, metadata, parseContext);
-	                        map.put("text", handler.toString().replaceAll("\n|\r|\t", " "));
+	                        map.put("text", handler.toString().replaceAll("\r", " "));
 	                        map.put("title", metadata.get(TikaCoreProperties.TITLE));
 	                        map.put("pageCount", metadata.get("xmpTPg:NPages"));
 	                        map.put("status_code", response.getStatusLine().getStatusCode() + "");
@@ -170,6 +170,7 @@ public class HtmlParser {
 		String line;
 			while ( (line = reader.readLine() ) != null){
 				if (line.contains(Settings.SEARCH_FOR)){
+					log("http:" + parseLineForPDFLink(line));
 					return "http:" + parseLineForPDFLink(line);
 				}
 			}
@@ -179,7 +180,9 @@ public class HtmlParser {
 	private String parseLineForPDFLink(String line) {
 		int beginIndex = line.indexOf(Settings.SEARCH_FOR);
 		int offset = 9;
-		int endIndex = Settings.SEARCH_FOR.length() + beginIndex;
+		String endToken = "\">(PDF)";
+		int offsetEnd = line.indexOf(endToken);
+		int endIndex = offsetEnd;
 		String link = line.substring(beginIndex + offset, endIndex);
 		return link;
 	}
