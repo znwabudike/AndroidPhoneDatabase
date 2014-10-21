@@ -1,7 +1,23 @@
 package com.github.znwabudike.androidphonedatabase.parser;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.swing.text.Document;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
+import org.apache.tika.parser.AutoDetectParser;
+import org.apache.tika.parser.ParseContext;
+import org.apache.tika.sax.BodyContentHandler;
 
 import com.github.znwabudike.androidphonedatabase.db.DbHandler;
 import com.github.znwabudike.androidphonedatabase.db.DbHelper;
@@ -15,27 +31,67 @@ public class HtmlParser {
 
 	DbHandler dbHandler = new DbHandler();
 
-	public ArrayList<AndroidDevice> parseResponse(BufferedReader reader) throws IOException {
-
+	public ArrayList<AndroidDevice> parseResponse(HttpResponse response) throws IOException {
+		InputStreamReader isr = new InputStreamReader(response.getEntity().getContent());
+		BufferedReader reader = new BufferedReader(isr);
+		
 		DbHelper dbHelper = new DbHelper();
 		dbHelper.createNewDatabase(DBSettings.TABLE_NAME);
 
 		String body = parseToString(reader);
+		log("Body = " + body);
 		ArrayList<AndroidDevice> devices = parseForDevices(body);
 
 		log("number of devices parsed: " + devices.size());
 
 		if (!dbHandler.insertDevices(devices, 0)){
 			log("Something Wrong With Insert!");
-			return devices;
 		} else {
 			log("insert successful!");
-			return devices;
 		}
+		reader.close();
+		isr.close();
+		return devices;
 
 	}
-
-
+	
+	public Map<String, Object> parsePDFFromWebpage(String url) {
+	    DefaultHttpClient httpclient = new DefaultHttpClient();
+	    Map<String, Object> map = new HashMap<String, Object>();
+	    try {
+	        HttpGet httpGet = new HttpGet(url);
+	        HttpResponse response = httpclient.execute(httpGet);
+	        HttpEntity entity = response.getEntity();
+	        InputStream input = null;
+	                if (entity != null) {
+	                    try{
+	                        input = entity.getContent();
+	                        BodyContentHandler handler = new BodyContentHandler();
+	                        Metadata metadata = new Metadata();
+	                        AutoDetectParser parser = new AutoDetectParser();
+	                        ParseContext parseContext = new ParseContext();
+	                        parser.parse(input, handler, metadata, parseContext);
+	                        map.put("text", handler.toString().replaceAll("\n|\r|\t", " "));
+	                        map.put("title", metadata.get(TikaCoreProperties.TITLE));
+	                        map.put("pageCount", metadata.get("xmpTPg:NPages"));
+	                        map.put("status_code", response.getStatusLine().getStatusCode() + "");
+	                } catch (Exception e) {                     
+	                    e.printStackTrace();
+	                }finally{
+	                    if(input != null){
+	                        try {
+	                            input.close();
+	                        } catch (IOException e) {
+	                            e.printStackTrace();
+	                        }
+	                    }
+	                }
+	                }
+	            }catch (Exception exception) {
+	                exception.printStackTrace();
+	            }
+	    return map;
+	}
 
 	private String parseToString(BufferedReader reader) throws IOException {
 		String string = "";
@@ -108,6 +164,24 @@ public class HtmlParser {
 		}
 		log("Size of devices returned= " + devices.size());
 		return devices;
+	}
+	
+	public String getPDFLink(BufferedReader reader) throws IOException {
+		String line;
+			while ( (line = reader.readLine() ) != null){
+				if (line.contains(Settings.SEARCH_FOR)){
+					return "http:" + parseLineForPDFLink(line);
+				}
+			}
+		return null;
+	}
+	
+	private String parseLineForPDFLink(String line) {
+		int beginIndex = line.indexOf(Settings.SEARCH_FOR);
+		int offset = 9;
+		int endIndex = Settings.SEARCH_FOR.length() + beginIndex;
+		String link = line.substring(beginIndex + offset, endIndex);
+		return link;
 	}
 
 	private void log(String string) {

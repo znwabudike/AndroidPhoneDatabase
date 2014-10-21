@@ -3,6 +3,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Map;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
@@ -33,46 +34,67 @@ import com.github.znwabudike.androidphonedatabase.struct.AndroidDevice;
 
 public class HttpHelper {
 	HttpClient client;
+	private HtmlParser p;
 	private static final String uri = Settings.URI;
 	public HttpHelper(){
-
+		p = new HtmlParser();
 	}
-	public HttpResponse getPhonesPage(){
+	public HttpResponse getResponse(String uri){
 		client = new DefaultHttpClient();
 		HttpGet httpGet = new HttpGet(uri);
 		HttpResponse response = null;
-		
+
 		try{
 			log("Sending request");
 			response = client.execute(httpGet);
+			log("Got Response");
 			StatusLine statusLine = response.getStatusLine();
+			log("Getting Status");
 			int statusCode = statusLine.getStatusCode();
-			log("Status Code = " + statusCode);
-			
+			log("Status Code = " + (statusCode == 200 ? "Ok" : ("Fail " + statusCode)));
+
 		}catch(ClientProtocolException e){
 			e.printStackTrace();
 		}catch(IOException e){
 			e.printStackTrace();
 		}
+
 		return response;
+	}
+	public String parseFirstResponseForPDF(HttpResponse response){
+		
+		try {
+			InputStreamReader isr = new InputStreamReader(response.getEntity().getContent());
+			BufferedReader reader = new BufferedReader(isr);
+			String URI = p.getPDFLink(reader);
+			Map<String, Object> map = p.parsePDFFromWebpage(URI);
+			log("text = " + map.get("text").toString());
+		} catch (IllegalStateException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return null;
 	}
 	
 	public ArrayList<AndroidDevice> parseResponse(HttpResponse response) throws IllegalStateException, IOException{
+
+
 		ArrayList<AndroidDevice> deviceMap = null;
-		InputStreamReader isr = new InputStreamReader(response.getEntity().getContent());
-		BufferedReader reader = new BufferedReader(isr);
-		HtmlParser p = new HtmlParser();
-		deviceMap = p.parseResponse(reader);
+
+		p = new HtmlParser();
+		deviceMap = p.parseResponse(response);
 		log("size =" + deviceMap.size());
-		reader.close();
-		isr.close();
 		log("list parsed - Finish");
 		return deviceMap;
 	}
-	
+
 	private void log(String string) {
 		if (Settings.DEBUG){
-//		if (true){
+			//		if (true){
 			String TAG = this.getClass().getSimpleName();
 			System.out.println(TAG + " : " + string);
 		}

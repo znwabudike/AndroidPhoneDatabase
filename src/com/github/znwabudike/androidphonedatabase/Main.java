@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
 
 import com.github.znwabudike.androidphonedatabase.http.HttpHelper;
+import com.github.znwabudike.androidphonedatabase.settings.Settings;
 import com.github.znwabudike.androidphonedatabase.struct.AndroidDevice;
 
 /*
@@ -40,11 +42,18 @@ public class Main extends Applet{
 	}
 
 	private void downloadPhonesFile() {
-		HttpHelper httpH = new HttpHelper();
-		HttpResponse response = httpH.getPhonesPage();
+		
 		long time = System.currentTimeMillis();
 		ArrayList<AndroidDevice> deviceMap = null;
+		
+		HttpHelper httpH = new HttpHelper();
+		HttpResponse response = httpH.getResponse(Settings.URI);
+		String URI = httpH.parseFirstResponseForPDF(response);
+		
+	
+		
 		try {
+			
 			deviceMap = httpH.parseResponse(response);
 		} catch (IllegalStateException e) {e.printStackTrace();
 		} catch (IOException e) {e.printStackTrace();}
