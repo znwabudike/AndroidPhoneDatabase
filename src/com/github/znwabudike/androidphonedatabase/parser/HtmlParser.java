@@ -155,8 +155,8 @@ public class HtmlParser {
 		try {
 			while((line = br.readLine()) != null){
 				line = line.replace("\\n", "");
-				if (line != "" ){
-					if(!line.contains("(")){
+				if (line.compareTo("") != 0){
+					if(!line.contains("(") ){
 						manufacturer = line;
 					}else{
 						int ndx = line.indexOf("(");
@@ -168,6 +168,9 @@ public class HtmlParser {
 							model_number += line;
 							
 						}
+						
+						String s = " | ";
+						log(manufacturer + s + model_number + s + common_name);
 						AndroidDevice device = new AndroidDevice(manufacturer, model_number, common_name, null);
 						devices.add(device);
 					}

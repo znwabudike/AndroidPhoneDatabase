@@ -22,6 +22,7 @@ public class DbHelper {
 	 * Create a connection to the databse and return a statement if 
 	 * successful, else return null.  Timeout = 30s
 	 */
+	
 	public Statement createConnection() throws IOException{
 //		String dbpath = DBSettings.PATH_TO_DB;
 //		String fullpath = DBSettings.PATH_TO_DB + DBSettings.DB_NAME;

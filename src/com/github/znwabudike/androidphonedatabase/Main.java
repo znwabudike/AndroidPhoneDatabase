@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import org.apache.commons.httpclient.HttpParser;
 import org.apache.http.HttpResponse;
 
+import com.github.znwabudike.androidphonedatabase.db.DbHandler;
 import com.github.znwabudike.androidphonedatabase.http.HttpHelper;
 import com.github.znwabudike.androidphonedatabase.parser.HtmlParser;
 import com.github.znwabudike.androidphonedatabase.settings.Settings;
@@ -53,8 +54,11 @@ public class Main extends Applet{
 		HttpResponse response = httpH.getResponse(Settings.URI);
 		String text = p.parseFirstResponseForPDF(response);
 		deviceMap = p.parseTextForDeviceMap(text);
-		
-		
+		DbHandler dbh = new DbHandler();
+		boolean inserted = dbh.insertDevices(deviceMap, 0);
+		if (inserted){
+			log("Success");
+		}else log("Failed");
 //		try {
 //			
 ////			deviceMap = p.parseResponse(response);
