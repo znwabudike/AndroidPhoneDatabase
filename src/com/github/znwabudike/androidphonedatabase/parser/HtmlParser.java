@@ -1,13 +1,12 @@
 package com.github.znwabudike.androidphonedatabase.parser;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.swing.text.Document;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -34,7 +33,7 @@ public class HtmlParser {
 	public ArrayList<AndroidDevice> parseResponse(HttpResponse response) throws IOException {
 		InputStreamReader isr = new InputStreamReader(response.getEntity().getContent());
 		BufferedReader reader = new BufferedReader(isr);
-		
+
 		DbHelper dbHelper = new DbHelper();
 		dbHelper.createNewDatabase(DBSettings.TABLE_NAME);
 
@@ -54,43 +53,76 @@ public class HtmlParser {
 		return devices;
 
 	}
-	
+
+	public String parseFirstResponseForPDF(HttpResponse response){
+
+		try {
+			InputStreamReader isr = new InputStreamReader(response.getEntity().getContent());
+			BufferedReader reader = new BufferedReader(isr);
+			String URI = getPDFLink(reader);
+			Map<String, Object> map = parsePDFFromWebpage(URI);
+			log("text = " + map.get("text").toString());
+			return map.get("text").toString();
+
+		} catch (IllegalStateException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+
+	//	public ArrayList<AndroidDevice> parseResponse(HttpResponse response) throws IllegalStateException, IOException{
+	//
+	//
+	//		ArrayList<AndroidDevice> deviceMap = null;
+	//
+	//		p = new HtmlParser();
+	//		deviceMap = p.parseResponse(response);
+	//		log("size =" + deviceMap.size());
+	//		log("list parsed - Finish");
+	//		return deviceMap;
+	//	}
+
 	public Map<String, Object> parsePDFFromWebpage(String url) {
-	    DefaultHttpClient httpclient = new DefaultHttpClient();
-	    Map<String, Object> map = new HashMap<String, Object>();
-	    try {
-	        HttpGet httpGet = new HttpGet(url);
-	        HttpResponse response = httpclient.execute(httpGet);
-	        HttpEntity entity = response.getEntity();
-	        InputStream input = null;
-	                if (entity != null) {
-	                    try{
-	                        input = entity.getContent();
-	                        BodyContentHandler handler = new BodyContentHandler(10*1024*1024); 
-	                        Metadata metadata = new Metadata();
-	                        AutoDetectParser parser = new AutoDetectParser();
-	                        ParseContext parseContext = new ParseContext();
-	                        parser.parse(input, handler, metadata, parseContext);
-	                        map.put("text", handler.toString().replaceAll("\r", " "));
-	                        map.put("title", metadata.get(TikaCoreProperties.TITLE));
-	                        map.put("pageCount", metadata.get("xmpTPg:NPages"));
-	                        map.put("status_code", response.getStatusLine().getStatusCode() + "");
-	                } catch (Exception e) {                     
-	                    e.printStackTrace();
-	                }finally{
-	                    if(input != null){
-	                        try {
-	                            input.close();
-	                        } catch (IOException e) {
-	                            e.printStackTrace();
-	                        }
-	                    }
-	                }
-	                }
-	            }catch (Exception exception) {
-	                exception.printStackTrace();
-	            }
-	    return map;
+		DefaultHttpClient httpclient = new DefaultHttpClient();
+		Map<String, Object> map = new HashMap<String, Object>();
+		try {
+			HttpGet httpGet = new HttpGet(url);
+			HttpResponse response = httpclient.execute(httpGet);
+			HttpEntity entity = response.getEntity();
+			InputStream input = null;
+			if (entity != null) {
+				try{
+					input = entity.getContent();
+					BodyContentHandler handler = new BodyContentHandler(10*1024*1024); 
+					Metadata metadata = new Metadata();
+					AutoDetectParser parser = new AutoDetectParser();
+					ParseContext parseContext = new ParseContext();
+					parser.parse(input, handler, metadata, parseContext);
+					map.put("text", handler.toString().replaceAll("\r", " "));
+					map.put("title", metadata.get(TikaCoreProperties.TITLE));
+					map.put("pageCount", metadata.get("xmpTPg:NPages"));
+					map.put("status_code", response.getStatusLine().getStatusCode() + "");
+				} catch (Exception e) {                     
+					e.printStackTrace();
+				}finally{
+					if(input != null){
+						try {
+							input.close();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
+				}
+			}
+		}catch (Exception exception) {
+			exception.printStackTrace();
+		}
+		return map;
 	}
 
 	private String parseToString(BufferedReader reader) throws IOException {
@@ -112,6 +144,40 @@ public class HtmlParser {
 
 		}
 		return string;
+	}
+
+	public ArrayList<AndroidDevice> parseTextForDeviceMap(String text) {
+		ArrayList<AndroidDevice> devices = new ArrayList<AndroidDevice>();
+		InputStream is = new ByteArrayInputStream(text.getBytes());
+		BufferedReader br = new BufferedReader(new InputStreamReader(is));
+		String line = "";
+		String manufacturer = null;
+		try {
+			while((line = br.readLine()) != null){
+				line = line.replace("\\n", "");
+				if (line != "" ){
+					if(!line.contains("(")){
+						manufacturer = line;
+					}else{
+						int ndx = line.indexOf("(");
+						String common_name = line.substring(0,ndx);
+						// -1 for \n char
+						String model_number = line.substring(ndx,line.length());
+						if (!line.contains(")")){
+							line = br.readLine();
+							model_number += line;
+							
+						}
+						AndroidDevice device = new AndroidDevice(manufacturer, model_number, common_name, null);
+						devices.add(device);
+					}
+				}
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return devices;
 	}
 
 	private ArrayList<AndroidDevice> parseForDevices(String body) {
@@ -165,18 +231,18 @@ public class HtmlParser {
 		log("Size of devices returned= " + devices.size());
 		return devices;
 	}
-	
+
 	public String getPDFLink(BufferedReader reader) throws IOException {
 		String line;
-			while ( (line = reader.readLine() ) != null){
-				if (line.contains(Settings.SEARCH_FOR)){
-					log("http:" + parseLineForPDFLink(line));
-					return "http:" + parseLineForPDFLink(line);
-				}
+		while ( (line = reader.readLine() ) != null){
+			if (line.contains(Settings.SEARCH_FOR)){
+				log("http:" + parseLineForPDFLink(line));
+				return "http:" + parseLineForPDFLink(line);
 			}
+		}
 		return null;
 	}
-	
+
 	private String parseLineForPDFLink(String line) {
 		int beginIndex = line.indexOf(Settings.SEARCH_FOR);
 		int offset = 9;
@@ -194,6 +260,8 @@ public class HtmlParser {
 			System.out.println(TAG + " : " + string);
 		}
 	}
+
+
 }
 
 

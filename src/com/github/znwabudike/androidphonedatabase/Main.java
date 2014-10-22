@@ -3,10 +3,11 @@ import java.applet.Applet;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import org.apache.commons.httpclient.HttpParser;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
 
 import com.github.znwabudike.androidphonedatabase.http.HttpHelper;
+import com.github.znwabudike.androidphonedatabase.parser.HtmlParser;
 import com.github.znwabudike.androidphonedatabase.settings.Settings;
 import com.github.znwabudike.androidphonedatabase.struct.AndroidDevice;
 
@@ -30,13 +31,15 @@ import com.github.znwabudike.androidphonedatabase.struct.AndroidDevice;
 public class Main extends Applet{
 	String commonName = "SPH710";
 
+	private HtmlParser p;
+
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 
 	public void init(){
-		
+		p = new HtmlParser();
 		downloadPhonesFile();
 		
 	}
@@ -48,21 +51,21 @@ public class Main extends Applet{
 		
 		HttpHelper httpH = new HttpHelper();
 		HttpResponse response = httpH.getResponse(Settings.URI);
-		String URI = httpH.parseFirstResponseForPDF(response);
+		String text = p.parseFirstResponseForPDF(response);
+		deviceMap = p.parseTextForDeviceMap(text);
 		
-	
 		
-		try {
-			
-			deviceMap = httpH.parseResponse(response);
-		} catch (IllegalStateException e) {e.printStackTrace();
-		} catch (IOException e) {e.printStackTrace();}
-		finally{
+//		try {
+//			
+////			deviceMap = p.parseResponse(response);
+//		} catch (IllegalStateException e) {e.printStackTrace();
+//		} catch (IOException e) {e.printStackTrace();}
+//		finally{
 			log("Finished");
 			log("time taken = " + (System.currentTimeMillis() - time));
 			log("number of devices = " + deviceMap.size());
 			System.exit(0);
-		}
+//		}
 
 	}
 

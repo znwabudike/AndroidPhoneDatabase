@@ -61,36 +61,7 @@ public class HttpHelper {
 
 		return response;
 	}
-	public String parseFirstResponseForPDF(HttpResponse response){
-		
-		try {
-			InputStreamReader isr = new InputStreamReader(response.getEntity().getContent());
-			BufferedReader reader = new BufferedReader(isr);
-			String URI = p.getPDFLink(reader);
-			Map<String, Object> map = p.parsePDFFromWebpage(URI);
-			log("text = " + map.get("text").toString());
-		} catch (IllegalStateException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 
-		return null;
-	}
-	
-	public ArrayList<AndroidDevice> parseResponse(HttpResponse response) throws IllegalStateException, IOException{
-
-
-		ArrayList<AndroidDevice> deviceMap = null;
-
-		p = new HtmlParser();
-		deviceMap = p.parseResponse(response);
-		log("size =" + deviceMap.size());
-		log("list parsed - Finish");
-		return deviceMap;
-	}
 
 	private void log(String string) {
 		if (Settings.DEBUG){
