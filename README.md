@@ -3,9 +3,12 @@ AndroidPhoneDatabase
 
 Written by Zachary Nwabudike
 ------------------------------
-UPDATE 10/20/14 
 
-The code is broken right now.  It looks like Google changed their list from HTML to a .pdf file.
+UPDATE 10/21/14 - It looks like Google changed their list from HTML to a .pdf file.
+
+The code is semi-broken. It parses the PDF and generates an ArrayList<AndroidDevice> then attempts to insert it into the db.  
+Only the last transaction remains (last ~219 devices of ~7190)
+
 Working to get it resolved within the next few days. 
 
 -ZN
